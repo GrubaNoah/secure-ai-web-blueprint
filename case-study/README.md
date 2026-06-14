@@ -74,6 +74,15 @@ Built a real login (email + password + TOTP), made the admin pages operate on th
 **Principle:** retire the old path entirely — a fallback door is still a door.
 <!-- ![Live login](screenshots/06-live-login.png) -->
 
+### Phase 9 — Monitoring & Detection · *Domain 9 (visibility)*
+Wired **Axiom SIEM** (free tier) to the live admin login page via a server-side Next.js API route (`/api/log`). The route ships two event types — `admin_login_failed` and `admin_login_success` — to Axiom's HTTP ingest API. The `AXIOM_TOKEN` lives only in `.env.local` (gitignored) and Vercel's masked Production env var — it never reaches the client bundle. A threshold monitor fires an alert if more than 3 failed logins occur in any 10-minute window.
+**Principle:** an audit log tells you *what happened*; a SIEM + monitor tells you *right now*. Without active detection, a brute-force attack against `/admin/login` goes unnoticed until it succeeds.
+![Axiom dataset for wedding-site](screenshots/09-axiom-dataset.png)
+![AXIOM_TOKEN added to Vercel Production env — masked as Sensitive](screenshots/09-vercel-env.png)
+![Axiom Stream — admin_login_failed and admin_login_success events flowing in real time](screenshots/09-axiom-stream.png)
+![Axiom dashboard — Wedding Auth Log timeseries by event type](screenshots/09-axiom-dashboard.png)
+![Axiom Monitor — Login Fail Alert, threshold > 3 in 10-minute window](screenshots/09-axiom-monitor.png)
+
 ---
 
 ## Proof it works
@@ -94,11 +103,11 @@ Built a real login (email + password + TOTP), made the admin pages operate on th
 | Accountability | none | **audit log** (who/what/when) |
 | Functions | mutable `search_path` | pinned |
 | Identity | none | Supabase Auth |
+| Monitoring | none | **Axiom SIEM** — brute-force alert on > 3 failed logins / 10 min |
 
 ## Framework mapping
-- **NIST CSF 2.0:** PR.AA-01/05 (identity, access control), DE.* (detect, via the audit log)
-- **NIST 800-53:** AC-2/3/6 (account mgmt, enforcement, least privilege), IA-2 (MFA), IA-5 (secret rotation), AU-2/3 (audit)
+- **NIST CSF 2.0:** PR.AA-01/05 (identity, access control), DE.AE-2/4 (anomaly detection), DE.CM-1 (continuous monitoring)
+- **NIST 800-53:** AC-2/3/6 (account mgmt, enforcement, least privilege), IA-2 (MFA), IA-5 (secret rotation), AU-2/3 (audit), AU-6 (audit review), SI-4 (system monitoring)
 
 ## What's next
-- **Monitoring & detection (Domain 9):** ship Vercel + Supabase + audit logs to a SIEM (Axiom free tier / self-hosted Wazuh); alert on failed admin logins.
 - **Leaked-password protection:** enable Supabase's HaveIBeenPwned check (Pro tier).
