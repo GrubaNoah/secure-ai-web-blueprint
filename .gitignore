@@ -1,0 +1,9 @@
+# Internal working doc — NOT for the public repo (contains project ref, domain, file paths)
+PROJECT-HANDOFF.md
+
+# local tooling / OS
+.claude/
+.DS_Store
+
+# never publish staged screenshot extracts (may contain PII)
+case-study/screenshots/_staging/
